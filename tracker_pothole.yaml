@@ -1,0 +1,26 @@
+# BoT-SORT tracker tuned for a forward-moving (dashcam) view of potholes.
+#
+# Why BoT-SORT instead of plain ByteTrack:
+#   A pothole approaching the camera grows fast and slides toward the bottom of
+#   the frame, so box overlap (IoU) between consecutive frames drops and a naive
+#   IoU tracker spawns a NEW id -> the count keeps climbing for ONE pothole.
+#   BoT-SORT adds:
+#     - appearance Re-ID  : re-identifies the same pothole by how it LOOKS,
+#                           not just by box overlap (survives scale/position jumps)
+#     - camera motion comp: cancels the dashcam's global motion before matching
+#
+tracker_type: botsort
+
+track_high_thresh: 0.30    # first-association threshold
+track_low_thresh: 0.10     # second-association threshold
+new_track_thresh: 0.60     # higher = don't spawn a NEW id from a weak detection
+track_buffer: 120          # keep a lost track alive this many frames before dropping
+match_thresh: 0.85         # IoU match threshold (lenient -> tolerate fast motion/growth)
+fuse_score: True
+
+# --- BoT-SORT specific ---
+gmc_method: sparseOptFlow  # compensate global camera (dashcam) motion
+proximity_thresh: 0.50     # IoU gate before appearance is considered
+appearance_thresh: 0.30    # cosine-distance gate for Re-ID matching (looser = re-link across scale change)
+with_reid: True            # enable appearance Re-ID
+model: auto                # use the detector's own features for Re-ID (no extra weights/downloads)
